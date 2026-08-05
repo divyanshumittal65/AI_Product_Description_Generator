@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Builds
+.next/
+dist/
+build/
+out/
+
+# Database
+*.db
+*.db-journal
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# System files
+.DS_Store
+Thumbs.db

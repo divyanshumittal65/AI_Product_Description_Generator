@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # 1. Docker container serving small AI model (Ollama engine serving qwen2.5:0.5b)
+  model:
+    image: ollama/ollama:latest
+    container_name: product_ai_model
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_storage:/root/.ollama
+    restart: always
+
+  # 2. Express Backend API with persistent SQLite database
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: product_backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - DATABASE_URL=file:./dev.db
+      - MODEL_URL=http://model:11434
+      - MODEL_NAME=qwen2.5:0.5b
+    depends_on:
+      - model
+    volumes:
+      - backend_db:/app/prisma
+    restart: always
+
+  # 3. Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: product_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  ollama_storage:
+  backend_db:
