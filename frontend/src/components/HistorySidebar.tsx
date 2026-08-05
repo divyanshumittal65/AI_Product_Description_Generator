@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { History, Trash2, ArrowUpRight, Database } from 'lucide-react';
+import React, { useState } from 'react';
 import { GeneratedRecord } from './DescriptionCard';
 
 interface HistorySidebarProps {
@@ -17,61 +16,112 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
   onDelete,
   isLoading,
 }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const filteredHistory = history.filter((item) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      item.productName.toLowerCase().includes(q) ||
+      item.color.toLowerCase().includes(q) ||
+      item.material.toLowerCase().includes(q) ||
+      item.features.toLowerCase().includes(q) ||
+      item.tone.toLowerCase().includes(q)
+    );
+  });
+
+  const handleCopy = (e: React.MouseEvent, item: GeneratedRecord) => {
+    e.stopPropagation();
+    if (!item.generatedDescription || !item.id) return;
+    navigator.clipboard.writeText(item.generatedDescription);
+    setCopiedId(item.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   return (
-    <div className="glass-card rounded-2xl p-6 shadow-xl border border-slate-800/80">
-      <div className="flex items-center justify-between mb-4 border-b border-slate-800/80 pb-3">
-        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-          <History className="h-4 w-4 text-indigo-400" /> Saved History
-        </h3>
-        <span className="text-xs px-2 py-0.5 rounded-full bg-slate-900 border border-slate-700 text-slate-400 flex items-center gap-1">
-          <Database className="h-3 w-3 text-emerald-400" /> {history.length} records
+    <div className="neu-card p-6 md:p-8 bg-zinc-900">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b-2 border-zinc-700 pb-4 mb-4">
+        <div>
+          <h3 className="text-base font-black text-zinc-100">
+            Saved History
+          </h3>
+          <p className="text-xs text-zinc-400 font-medium mt-0.5">Stored in database</p>
+        </div>
+
+        <span className="text-xs font-black px-3 py-1 rounded-lg bg-amber-400 text-zinc-950 border-2 border-zinc-700 shadow-[2px_2px_0px_0px_#27272a]">
+          {history.length} saved
         </span>
       </div>
 
+      {/* Search Filter */}
+      {history.length > 0 && (
+        <div className="mb-4">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search saved descriptions..."
+            className="w-full px-3.5 py-2 rounded-xl neu-input text-xs text-zinc-100 font-semibold placeholder-zinc-500"
+          />
+        </div>
+      )}
+
+      {/* History Items List */}
       {isLoading ? (
-        <div className="py-8 text-center text-xs text-slate-500">Loading saved entries...</div>
-      ) : history.length === 0 ? (
-        <div className="py-8 text-center text-xs text-slate-500">
-          No saved descriptions yet. Generated items will be automatically stored here in the database.
+        <div className="py-12 text-center text-xs font-bold text-zinc-400">Loading saved entries...</div>
+      ) : filteredHistory.length === 0 ? (
+        <div className="py-12 text-center text-xs font-bold text-zinc-400">
+          {searchQuery ? 'No matching records found' : 'No saved descriptions yet.'}
         </div>
       ) : (
-        <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1 custom-scrollbar">
-          {history.map((item) => (
+        <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
+          {filteredHistory.map((item) => (
             <div
               key={item.id}
-              className="group bg-slate-950/60 hover:bg-slate-900/80 p-3.5 rounded-xl border border-slate-800/60 hover:border-indigo-500/40 transition-all flex items-start justify-between cursor-pointer"
               onClick={() => onSelect(item)}
+              className="bg-zinc-950 hover:bg-zinc-800/80 p-4 rounded-xl border-2 border-zinc-700 transition-all cursor-pointer space-y-2.5 shadow-[2px_2px_0px_0px_#27272a]"
             >
-              <div className="flex-1 min-w-0 pr-2">
-                <div className="flex items-center space-x-2">
-                  <h4 className="text-xs font-semibold text-slate-200 truncate group-hover:text-indigo-300 transition-colors">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center space-x-2 truncate">
+                  <h4 className="text-xs font-black text-zinc-100 truncate">
                     {item.productName}
                   </h4>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded bg-amber-400/10 text-amber-300 border border-amber-500/40">
                     {item.tone}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-                  {item.generatedDescription}
-                </p>
-                <div className="text-[10px] text-slate-500 mt-2 flex items-center gap-2">
-                  <span>{item.color}</span> • <span>{item.material}</span>
+
+                {/* Actions */}
+                <div className="flex items-center space-x-2 shrink-0 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={(e) => handleCopy(e, item)}
+                    className="text-amber-400 hover:underline"
+                  >
+                    {copiedId === item.id ? 'Copied' : 'Copy'}
+                  </button>
+                  <span className="text-zinc-600">•</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (item.id) onDelete(item.id);
+                    }}
+                    className="text-red-400 hover:underline"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-1 opacity-80 group-hover:opacity-100">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (item.id) onDelete(item.id);
-                  }}
-                  className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-950/40 transition-colors"
-                  title="Delete record from DB"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-                <ArrowUpRight className="h-3.5 w-3.5 text-slate-600 group-hover:text-indigo-400 transition-colors" />
+              <p className="text-xs text-zinc-300 font-medium line-clamp-2 leading-relaxed whitespace-pre-line bg-zinc-900 p-2.5 rounded-lg border border-zinc-700">
+                {item.generatedDescription}
+              </p>
+
+              <div className="flex items-center justify-between text-[10px] text-zinc-400 font-bold">
+                <span>{item.color} • {item.material}</span>
+                <span className="text-amber-400 font-extrabold">Load copy →</span>
               </div>
             </div>
           ))}

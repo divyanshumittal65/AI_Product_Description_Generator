@@ -2,8 +2,8 @@ import './globals.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'AI Product Description Generator | High-Converting Ecommerce Copy',
-  description: 'Generate compelling, professional product descriptions instantly with AI. Persistent database storage & Docker containerized intelligence.',
+  title: 'Product Description Generator',
+  description: 'Generate high-converting e-commerce product descriptions using Dockerized AI models and persistent MySQL database storage.',
 };
 
 export default function RootLayout({
@@ -13,7 +13,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="antialiased selection:bg-indigo-500 selection:text-white">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="antialiased selection:bg-emerald-600 selection:text-white bg-zinc-950 text-zinc-100 min-h-screen">
         {children}
       </body>
     </html>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Header } from '@/components/Header';
+import { Navbar } from '@/components/Navbar';
 import { ProductForm, ProductFormData } from '@/components/ProductForm';
 import { DescriptionCard, GeneratedRecord } from '@/components/DescriptionCard';
 import { HistorySidebar } from '@/components/HistorySidebar';
@@ -15,6 +15,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isHistoryLoading, setIsHistoryLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [activeModel, setActiveModel] = useState<string>('llama3.2:1b');
 
   const fetchHistory = async () => {
     try {
@@ -43,7 +44,9 @@ export default function Home() {
       if (res.data && res.data.data) {
         const newRecord: GeneratedRecord = res.data.data;
         setCurrentResult(newRecord);
-        // Refresh persistent history list
+        if (newRecord.modelUsed) {
+          setActiveModel(newRecord.modelUsed.replace('Ollama (', '').replace(')', ''));
+        }
         fetchHistory();
       }
     } catch (err: any) {
@@ -67,30 +70,46 @@ export default function Home() {
     }
   };
 
+  const scrollToForm = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const scrollToHistory = () => {
+    const el = document.getElementById('history-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#090d16] text-slate-100">
-      <Header />
+    <div className="min-h-screen flex flex-col bg-zinc-950 text-zinc-100 selection:bg-emerald-600 selection:text-white">
+      {/* Navigation Bar */}
+      <Navbar
+        modelName={activeModel}
+        historyCount={history.length}
+        onNewCopyClick={scrollToForm}
+        onHistoryClick={scrollToHistory}
+      />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Banner */}
-        <div className="glass-card rounded-2xl p-6 relative overflow-hidden border border-indigo-900/40">
-          <div className="absolute -right-12 -top-12 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="relative z-10">
-            <h2 className="text-2xl font-bold tracking-tight text-white">
-              Transform Features into <span className="gradient-text">High-Converting Copy</span>
-            </h2>
-            <p className="text-sm text-slate-400 mt-1 max-w-2xl">
-              Powered by a Dockerized lightweight AI model & Express backend with persistent SQLite database storage.
-            </p>
-          </div>
+        
+        {/* Simple Middle-Aligned Page Header */}
+        <div className="text-center py-2 sm:py-4">
+          <h1 className="text-2xl sm:text-4xl font-black text-zinc-100 tracking-tight">
+            Product Description Generator
+          </h1>
+          <p className="text-xs sm:text-sm text-zinc-400 font-medium mt-2 max-w-xl mx-auto leading-relaxed">
+            Generate clear, persuasive product descriptions for your e-commerce catalog.
+          </p>
         </div>
 
+        {/* Error Alert Toast */}
         {errorMsg && (
-          <div className="p-4 rounded-xl bg-red-950/60 border border-red-800/80 text-red-200 text-sm flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-red-950/80 border-2 border-zinc-700 text-red-200 text-xs font-bold flex items-center justify-between shadow-[3px_3px_0px_0px_#27272a]">
             <span>{errorMsg}</span>
             <button
               onClick={() => setErrorMsg(null)}
-              className="text-xs underline hover:text-white"
+              className="text-xs font-extrabold underline hover:text-white ml-4"
             >
               Dismiss
             </button>
@@ -99,27 +118,28 @@ export default function Home() {
 
         {/* Core Layout Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Form */}
+          
+          {/* Form Column */}
           <div className="lg:col-span-5">
             <ProductForm onSubmit={handleGenerate} isLoading={isLoading} />
           </div>
 
-          {/* Right Column: Active Card & Persistent History */}
+          {/* Results & History Column */}
           <div className="lg:col-span-7 space-y-8">
             <DescriptionCard data={currentResult} isLoading={isLoading} />
-            <HistorySidebar
-              history={history}
-              onSelect={(item) => setCurrentResult(item)}
-              onDelete={handleDeleteRecord}
-              isLoading={isHistoryLoading}
-            />
+            
+            <div id="history-section">
+              <HistorySidebar
+                history={history}
+                onSelect={(item) => setCurrentResult(item)}
+                onDelete={handleDeleteRecord}
+                isLoading={isHistoryLoading}
+              />
+            </div>
           </div>
+
         </div>
       </main>
-
-      <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500">
-        AI Product Description Generator • Next.js + Express + Prisma SQLite + Docker AI Model
-      </footer>
     </div>
   );
 }

@@ -1,10 +1,9 @@
 import axios from 'axios';
 import { ProductInput } from '../validators/productValidator';
 
-const MODEL_URL = process.env.MODEL_URL || 'http://localhost:11434';
-const MODEL_NAME = process.env.MODEL_NAME || 'qwen2.5:0.5b';
-
 export async function generateProductDescription(input: ProductInput): Promise<{ description: string; modelUsed: string }> {
+  const modelName = process.env.MODEL_NAME || 'llama3.2:1b';
+  const modelUrl = process.env.MODEL_URL || 'http://localhost:11434';
   const prompt = `Write a high-converting, engaging, and professional product description for the following item:
 
 Product Name: ${input.productName}
@@ -24,23 +23,23 @@ Keep it concise, clear, and compelling.`;
   try {
     // Attempting to call Dockerized Ollama / Model Container endpoint
     const response = await axios.post(
-      `${MODEL_URL}/api/generate`,
+      `${modelUrl}/api/generate`,
       {
-        model: MODEL_NAME,
+        model: modelName,
         prompt: prompt,
         stream: false,
       },
-      { timeout: 15000 }
+      { timeout: 25000 }
     );
 
     if (response.data && response.data.response) {
       return {
         description: response.data.response.trim(),
-        modelUsed: `Docker (${MODEL_NAME})`,
+        modelUsed: `Ollama (${modelName})`,
       };
     }
   } catch (error: any) {
-    console.warn(`[AI Service] Docker model service at ${MODEL_URL} not reachable or returned error: ${error?.message || error}. Using dynamic AI rule engine backup.`);
+    console.warn(`[AI Service] Docker model service at ${modelUrl} not reachable or returned error: ${error?.message || error}. Using dynamic AI rule engine backup.`);
   }
 
   // Fallback Rule-Based AI Engine if Docker model container is starting up or downloading
