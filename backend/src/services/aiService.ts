@@ -50,6 +50,109 @@ Keep it concise, clear, and compelling.`;
   };
 }
 
+export async function streamProductDescription(
+  input: ProductInput,
+  onChunk: (chunk: string) => void,
+  onDone: (fullText: string, modelUsed: string) => void,
+  onError: (err: any) => void
+): Promise<void> {
+  const modelName = process.env.MODEL_NAME || 'llama3.2:1b';
+  const modelUrl = process.env.MODEL_URL || 'http://localhost:11434';
+  const prompt = `Write a high-converting, engaging, and professional product description for the following item:
+
+Product Name: ${input.productName}
+Color: ${input.color}
+Material: ${input.material}
+Key Features: ${input.features}
+Tone of Voice: ${input.tone}
+
+Include:
+1. An attention-grabbing headline.
+2. A compelling introductory paragraph highlighting comfort, quality, and style.
+3. Key bullet points summarizing its features.
+4. A call to action.
+
+Keep it concise, clear, and compelling.`;
+
+  try {
+    const response = await axios.post(
+      `${modelUrl}/api/generate`,
+      {
+        model: modelName,
+        prompt: prompt,
+        stream: true,
+      },
+      {
+        responseType: 'stream',
+        timeout: 25000,
+      }
+    );
+
+    let fullText = '';
+    const stream = response.data;
+
+    stream.on('data', (chunk: Buffer | string) => {
+      const lines = chunk.toString().split('\n').filter((line: string) => line.trim());
+      for (const line of lines) {
+        try {
+          const parsed = JSON.parse(line);
+          if (parsed.response) {
+            fullText += parsed.response;
+            onChunk(parsed.response);
+          }
+          if (parsed.done) {
+            onDone(fullText.trim(), `Ollama (${modelName})`);
+            return;
+          }
+        } catch {
+          // ignore chunk fragment
+        }
+      }
+    });
+
+    stream.on('end', () => {
+      if (fullText) {
+        onDone(fullText.trim(), `Ollama (${modelName})`);
+      }
+    });
+
+    stream.on('error', (err: any) => {
+      console.warn(`[AI Service Stream] Ollama stream error: ${err?.message || err}. Using rule engine fallback.`);
+      streamRuleBasedFallback(input, onChunk, onDone);
+    });
+
+    return;
+  } catch (error: any) {
+    console.warn(`[AI Service] Docker model service at ${modelUrl} not reachable for streaming: ${error?.message || error}. Using rule engine stream backup.`);
+  }
+
+  streamRuleBasedFallback(input, onChunk, onDone);
+}
+
+function streamRuleBasedFallback(
+  input: ProductInput,
+  onChunk: (chunk: string) => void,
+  onDone: (fullText: string, modelUsed: string) => void
+) {
+  const fullText = generateRuleBasedDescription(input);
+  // Split text into tokens/words preserving spaces and newlines
+  const tokens = fullText.split(/(\s+)/);
+  let index = 0;
+
+  const interval = setInterval(() => {
+    if (index < tokens.length) {
+      const chunk = tokens[index];
+      if (chunk) {
+        onChunk(chunk);
+      }
+      index++;
+    } else {
+      clearInterval(interval);
+      onDone(fullText, 'AI Rule Engine (Fallback)');
+    }
+  }, 20);
+}
+
 function generateRuleBasedDescription(input: ProductInput): string {
   const featuresList = input.features.split(',').map(f => f.trim()).filter(Boolean);
   const featureBullets = featuresList.map(f => `• ${f}`).join('\n');
@@ -87,3 +190,4 @@ ${featureBullets || `• Premium ${input.material} construction\n• Stunning ${
 
 Upgrade your lifestyle today with the ${input.productName}!`;
 }
+

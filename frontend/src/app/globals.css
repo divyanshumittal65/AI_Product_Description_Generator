@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
 
@@ -16,112 +16,40 @@ body {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: #18181b;
 }
 ::-webkit-scrollbar-thumb {
   background: #3f3f46;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #52525b;
 }
 
-/* Neubrutalist / Tactile Neu Surface - Dark Theme */
-.neu-card {
+/* Simple Dark Input Fields */
+.chat-input-field {
   background-color: #18181b;
-  border: 2px solid #3f3f46;
-  border-radius: 1rem;
-  box-shadow: 4px 4px 0px 0px #27272a;
-  transition: all 0.15s ease-in-out;
-}
-
-.neu-card-interactive {
-  background-color: #18181b;
-  border: 2px solid #3f3f46;
-  border-radius: 1rem;
-  box-shadow: 3px 3px 0px 0px #27272a;
-  transition: all 0.15s ease-in-out;
-}
-.neu-card-interactive:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0px 0px #27272a;
-}
-
-/* Input Fields */
-.neu-input {
-  background-color: #09090b;
-  border: 2px solid #3f3f46;
+  border: 1px solid #27272a;
   color: #f4f4f5;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s ease;
 }
-.neu-input:focus {
-  border-color: #2563eb;
-  box-shadow: 3px 3px 0px 0px #2563eb;
+.chat-input-field:focus {
+  border-color: #3b82f6;
   outline: none;
 }
 
-/* Yellow / Amber Button */
-.btn-neu-yellow {
-  background-color: #fbbf24;
-  color: #09090b;
-  border: 2px solid #3f3f46;
-  box-shadow: 3px 3px 0px 0px #27272a;
-  transition: all 0.15s ease;
-}
-.btn-neu-yellow:hover:not(:disabled) {
-  background-color: #f59e0b;
-}
-
-/* Red Button */
-.btn-neu-red {
-  background-color: #dc2626;
-  color: #ffffff;
-  border: 2px solid #3f3f46;
-  box-shadow: 3px 3px 0px 0px #27272a;
-  transition: all 0.15s ease;
-}
-.btn-neu-red:hover:not(:disabled) {
-  background-color: #b91c1c;
-}
-
-/* Blue Button */
-.btn-neu-blue {
+/* Simple Primary Button */
+.btn-primary-blue {
   background-color: #2563eb;
   color: #ffffff;
-  border: 2px solid #3f3f46;
-  box-shadow: 3px 3px 0px 0px #27272a;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease;
 }
-.btn-neu-blue:hover:not(:disabled) {
+.btn-primary-blue:hover:not(:disabled) {
   background-color: #1d4ed8;
-}
-
-/* White Button */
-.btn-neu-white {
-  background-color: #f4f4f5;
-  color: #09090b;
-  border: 2px solid #3f3f46;
-  box-shadow: 3px 3px 0px 0px #27272a;
-  transition: all 0.15s ease;
-}
-.btn-neu-white:hover:not(:disabled) {
-  background-color: #ffffff;
-}
-
-/* Black Button */
-.btn-neu-black {
-  background-color: #09090b;
-  color: #f4f4f5;
-  border: 2px solid #3f3f46;
-  box-shadow: 3px 3px 0px 0px #27272a;
-  transition: all 0.15s ease;
-}
-.btn-neu-black:hover:not(:disabled) {
-  background-color: #18181b;
 }
 
 .mono-font {

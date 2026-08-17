@@ -29,7 +29,7 @@ export const DescriptionCard: React.FC<DescriptionCardProps> = ({ data, isLoadin
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (isLoading) {
+  if (isLoading && !data) {
     return (
       <div className="neu-card p-8 min-h-[480px] flex flex-col items-center justify-center text-center bg-zinc-900">
         <h3 className="text-base font-black text-zinc-100">Generating Description...</h3>
@@ -51,7 +51,7 @@ export const DescriptionCard: React.FC<DescriptionCardProps> = ({ data, isLoadin
     );
   }
 
-  const wordCount = data.generatedDescription.trim().split(/\s+/).length;
+  const wordCount = data.generatedDescription.trim() ? data.generatedDescription.trim().split(/\s+/).length : 0;
   const charCount = data.generatedDescription.length;
 
   return (
@@ -74,7 +74,8 @@ export const DescriptionCard: React.FC<DescriptionCardProps> = ({ data, isLoadin
 
           <button
             onClick={handleCopy}
-            className={`text-xs px-4 py-2 rounded-xl font-bold transition-all ${
+            disabled={isLoading || !data.generatedDescription}
+            className={`text-xs px-4 py-2 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
               copied
                 ? 'btn-neu-white'
                 : 'btn-neu-yellow'
@@ -85,14 +86,28 @@ export const DescriptionCard: React.FC<DescriptionCardProps> = ({ data, isLoadin
         </div>
 
         {/* Copy Display */}
-        <div className="bg-zinc-950 p-6 rounded-xl border-2 border-zinc-700 text-zinc-100 text-sm leading-relaxed whitespace-pre-line font-medium shadow-[2px_2px_0px_0px_#27272a] selection:bg-emerald-600 selection:text-white">
-          {data.generatedDescription}
+        <div className="bg-zinc-950 p-6 rounded-xl border-2 border-zinc-700 text-zinc-100 text-sm leading-relaxed whitespace-pre-line font-medium shadow-[2px_2px_0px_0px_#27272a] selection:bg-emerald-600 selection:text-white min-h-[220px]">
+          {data.generatedDescription ? (
+            <>
+              {data.generatedDescription}
+              {isLoading && (
+                <span className="inline-block w-2.5 h-4 ml-1 bg-amber-400 animate-pulse font-bold align-middle">▌</span>
+              )}
+            </>
+          ) : isLoading ? (
+            <span className="text-zinc-500 italic flex items-center gap-2">
+              Generating streaming response...
+              <span className="inline-block w-2.5 h-4 bg-amber-400 animate-pulse font-bold">▌</span>
+            </span>
+          ) : (
+            <span className="text-zinc-500 italic">No description content</span>
+          )}
         </div>
       </div>
 
       {/* Footer Info */}
       <div className="mt-8 pt-4 border-t-2 border-zinc-700 flex items-center justify-between text-xs text-zinc-400 font-bold">
-        <span>{data.modelUsed || 'llama3.2:1b'}</span>
+        <span>{data.modelUsed || (isLoading ? 'Streaming...' : 'llama3.2:1b')}</span>
 
         <div className="flex items-center space-x-3 mono-font text-[11px]">
           <span>{wordCount} words</span>
@@ -103,3 +118,4 @@ export const DescriptionCard: React.FC<DescriptionCardProps> = ({ data, isLoadin
     </div>
   );
 };
+
