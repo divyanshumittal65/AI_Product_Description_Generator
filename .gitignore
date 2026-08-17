@@ -22,3 +22,7 @@ npm-debug.log*
 # System files
 .DS_Store
 Thumbs.db
+
+# Project notes & internal docs
+explaination.md
+explanation.md

@@ -1,16 +1,20 @@
-# 🚀 AI Product Description Generator
+# 🚀 Prompt Generator - AI Product Description Generator
 
-A modern, full-stack, AI-powered e-commerce copy generation platform. Built with **Next.js 14 (App Router)**, **Node.js/Express**, **Prisma ORM**, **MySQL**, and a containerized **Ollama Local LLM (`llama3.2:1b`)**.
+A modern, full-stack, AI-powered e-commerce copy generation platform featuring **ChatGPT-style Server-Sent Events (SSE) streaming responses**. Built with **Next.js 14 (App Router)**, **Node.js/Express**, **Prisma ORM**, **MySQL**, and a containerized **Ollama Local LLM (`llama3.2:1b`)**.
 
-Designed with a sleek, high-contrast **Tactile Dark Zinc & Amber** design system.
+Designed with a clean, minimal **Dark Grey Chatbot Interface**.
 
 ---
 
 ## 📌 Project Overview
 
-The **AI Product Description Generator** automates e-commerce copywriting by converting raw product specifications (Name, Color, Material, Key Features, Tone) into structured, persuasive product descriptions complete with headlines, feature highlights, and call-to-actions (CTAs).
+The **Prompt Generator** automates e-commerce copywriting by converting product specifications (Name, Color, Material, Key Features, Tone) into structured, persuasive product descriptions complete with headlines, feature highlights, and call-to-actions (CTAs).
 
-All generated records are automatically saved to a persistent **MySQL database** and can be retrieved, searched, copied, or reloaded anytime through an interactive **History Engine**.
+### Key Features:
+- **ChatGPT-Style SSE Live Streaming:** Responses stream live chunk-by-chunk directly into the browser with a live typewriter effect and cursor (`▌`).
+- **Clean Minimalist Chatbot Interface:** Clean conversation feed with user prompt bubbles and assistant response containers.
+- **Dedicated History Route (`/history`):** Saved descriptions are persisted to a **MySQL database** via Prisma ORM and can be searched, copied, deleted, or reloaded into the active chat session.
+- **Fault-Tolerant AI Engine:** Dual-engine architecture guarantees zero downtime. Connects to Dockerized Ollama or uses a tokenized micro-delay fallback stream when Ollama is offline.
 
 ---
 
@@ -19,26 +23,23 @@ All generated records are automatically saved to a persistent **MySQL database**
 ### **1. Frontend (User Interface)**
 * **Framework:** [Next.js 14](https://nextjs.org/) (App Router, Client & Server Components)
 * **Language:** TypeScript
-* **Styling:** Tailwind CSS with Custom Tactile Dark Neubrutalist CSS Tokens
-* **Icons:** Lucide React
+* **Styling:** Tailwind CSS with Clean Dark Theme Tokens (`zinc-950` / `zinc-900`)
+* **Streaming API:** Browser `EventSource` SSE Client
 
 ### **2. Backend (API Layer)**
 * **Runtime:** Node.js + Express
 * **Language:** TypeScript
 * **ORM & Database Client:** [Prisma ORM](https://www.prisma.io/)
-* **API Architecture:** RESTful Endpoints (`POST /api/generate`, `GET /api/descriptions`, `DELETE /api/descriptions/:id`)
-* **HTTP Client:** Axios (for connecting to Ollama LLM container)
+* **Streaming API:** Server-Sent Events (`Content-Type: text/event-stream`)
+* **HTTP Client:** Axios (for Ollama LLM container integration)
 
 ### **3. Database Layer**
-* **Engine:** MySQL 8.0 (Dockerized containerized instance)
-* **Schema Management:** Prisma Migrations & Declarative Schema Definitions
+* **Engine:** MySQL 8.0 (Containerized or local instance)
+* **Schema Management:** Prisma Migrations & Declarative Schema
 
 ### **4. AI Model & Inference Engine**
 * **Local LLM Container:** [Ollama](https://ollama.com/) serving open-weight models (`llama3.2:1b` / `qwen2.5:0.5b`)
-* **Fallback Resilience:** Custom AI Rule Engine backup ensuring 100% uptime even if the LLM container is initializing or downloading model weights.
-
-### **5. Infrastructure & Containerization**
-* **Orchestration:** Docker Compose multi-service architecture (`model`, `mysqldb`, `backend`, `frontend`)
+* **Fallback Stream Engine:** Tokenized micro-delay stream fallback providing live typewriter responses.
 
 ---
 
@@ -47,8 +48,8 @@ All generated records are automatically saved to a persistent **MySQL database**
 ```
 ┌─────────────────────────┐          ┌─────────────────────────┐
 │ Next.js 14 (Frontend)   │ ───────> │ Node.js Express API     │
-│ http://localhost:3000   │ <─────── │ http://localhost:5000   │
-└─────────────────────────┘          └────────────┬────────────┘
+│ http://localhost:3000   │ <======= │ http://localhost:5000   │
+└─────────────────────────┘   (SSE)  └────────────┬────────────┘
                                                   │
                       ┌───────────────────────────┴───────────────────────────┐
                       ▼                                                       ▼
@@ -59,13 +60,13 @@ All generated records are automatically saved to a persistent **MySQL database**
         └───────────────────────────┘                           └───────────────────────────┘
 ```
 
-### **Detailed Data Flow:**
-1. **User Action:** User inputs product attributes (Product Name, Color, Material, Features, Tone) on the frontend form.
-2. **API Request:** Frontend issues a `POST` request to `/api/generate` with JSON payload.
-3. **AI Inference:** The Express backend constructs a structured prompt and calls Ollama's `/api/generate` REST endpoint over HTTP.
-4. **Fallback Handling:** If Ollama is unreachable or timing out, the backend gracefully delegates generation to the internal AI Rule Engine.
-5. **Persistence:** The generated description is stored in the MySQL database via Prisma ORM (`prisma.productDescription.create`).
-6. **UI Hydration:** The response is returned to the frontend, updating the UI card in real time and appending the entry to the History Sidebar.
+### **SSE Streaming Data Flow:**
+1. **User Action:** User inputs product attributes into the floating prompt console.
+2. **Session Initialization:** Frontend posts parameters to `POST /api/generate/session` and receives a unique `sessionId`.
+3. **SSE Connection:** Frontend establishes an `EventSource` connection to `GET /api/generate/stream/:sessionId`.
+4. **Live Streaming:** Express streams response chunks line-by-line (`data: {"text":"chunk"}\n\n`).
+5. **UI Typewriter Effect:** The frontend appends text live to the assistant message bubble in real time.
+6. **Completion & DB Persistence:** Upon completion (`done: true`), backend persists the record to MySQL (`prisma.productDescription.create`), closes the SSE connection cleanly, and refreshes the history list.
 
 ---
 
@@ -87,28 +88,6 @@ model ProductDescription {
   updatedAt            DateTime @updatedAt
 }
 ```
-
----
-
-## ✨ Key Features
-
-1. **Multi-Tone Copywriting Engine:**
-   * **Professional:** Polished, trustworthy e-commerce copy.
-   * **Luxury / Premium:** Sophisticated, elegant phrasing highlighting exclusivity.
-   * **Casual / Playful:** Friendly, relatable, and approachable tone.
-   * **Creative:** Engaging, narrative-driven copy.
-   * **SEO Optimized:** Keyword-focused, scannable bullet points for search ranking.
-
-2. **Interactive Quick Presets:**
-   * Pre-configured product demo chips (*Men's Cotton T-Shirt*, *Slim Leather Wallet*, *Noise-Canceling Headphones*) for 1-click testing.
-
-3. **Persistent History Engine & Real-Time Filter:**
-   * Automatically retains generated descriptions across browser sessions.
-   * Real-time search filter searching across product name, material, color, and tone.
-   * 1-click **Copy to Clipboard** and **Load Copy** features.
-
-4. **Fault-Tolerant AI Engine:**
-   * Dual-engine architecture guarantees zero downtime.
 
 ---
 
@@ -164,21 +143,6 @@ npm install
 npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## 🎓 Technical Interview Q&A (Study Guide)
-
-When presenting or discussing this project, reference these technical points:
-
-### **Q1: Why use Prisma ORM over raw SQL queries?**
-> *"Prisma provides full TypeScript type-safety from database query to API response, automatically generating types based on the schema. It simplifies migrations (`npx prisma db push`), prevents SQL injection attacks, and provides a clean declarative syntax."*
-
-### **Q2: How does the AI inference pipeline work?**
-> *"The backend uses Axios to post structured prompts to Ollama's REST API endpoint (`http://localhost:11434/api/generate`). To ensure zero downtime, I implemented a fallback mechanism: if the local LLM container is busy or offline, an algorithmic rule engine generates fallback copy so the user experience is never broken."*
-
-### **Q3: How is state managed between the frontend and database?**
-> *"The Next.js frontend maintains reactive React state (`useState`, `useEffect`). Upon submission, it sends a payload to the backend, receives the persisted database object, and updates the local state immutably so the generated copy card and history list update immediately without full page reloads."*
 
 ---
 
